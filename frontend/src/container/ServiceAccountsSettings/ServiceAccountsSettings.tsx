@@ -5,7 +5,6 @@ import type { MenuProps } from 'antd';
 import { Dropdown } from 'antd';
 import { useListServiceAccounts } from 'api/generated/services/serviceaccount';
 import CreateServiceAccountModal from 'components/CreateServiceAccountModal/CreateServiceAccountModal';
-import { NoAuthGuard } from 'components/NoAuthGuard';
 import ErrorInPlace from 'components/ErrorInPlace/ErrorInPlace';
 import ServiceAccountDrawer from 'components/ServiceAccountDrawer/ServiceAccountDrawer';
 import ServiceAccountsTable, {
@@ -29,6 +28,7 @@ import {
 } from './utils';
 
 import './ServiceAccountsSettings.styles.scss';
+import { NoAuthGuard } from 'components/NoAuthGuard';
 
 function ServiceAccountsSettings(): JSX.Element {
 	const [currentPage, setPage] = useQueryState(
@@ -112,9 +112,9 @@ function ServiceAccountsSettings(): JSX.Element {
 
 		const maxPage = Math.max(1, Math.ceil(filteredAccounts.length / PAGE_SIZE));
 		if (currentPage > maxPage) {
-			setPage(maxPage);
+			void setPage(maxPage);
 		} else if (currentPage < 1) {
-			setPage(1);
+			void setPage(1);
 		}
 	}, [filteredAccounts.length, currentPage, setPage]);
 
@@ -130,8 +130,8 @@ function ServiceAccountsSettings(): JSX.Element {
 				</div>
 			),
 			onClick: (): void => {
-				setFilterMode(FilterMode.All);
-				setPage(1);
+				void setFilterMode(FilterMode.All);
+				void setPage(1);
 			},
 		},
 		{
@@ -143,8 +143,8 @@ function ServiceAccountsSettings(): JSX.Element {
 				</div>
 			),
 			onClick: (): void => {
-				setFilterMode(FilterMode.Active);
-				setPage(1);
+				void setFilterMode(FilterMode.Active);
+				void setPage(1);
 			},
 		},
 		{
@@ -156,8 +156,8 @@ function ServiceAccountsSettings(): JSX.Element {
 				</div>
 			),
 			onClick: (): void => {
-				setFilterMode(FilterMode.Deleted);
-				setPage(1);
+				void setFilterMode(FilterMode.Deleted);
+				void setPage(1);
 			},
 		},
 	];
@@ -176,7 +176,7 @@ function ServiceAccountsSettings(): JSX.Element {
 
 	const handleRowClick = useCallback(
 		(row: ServiceAccountRow): void => {
-			setSelectedAccountId(row.id);
+			void setSelectedAccountId(row.id);
 		},
 		[setSelectedAccountId],
 	);
@@ -184,9 +184,9 @@ function ServiceAccountsSettings(): JSX.Element {
 	const handleDrawerSuccess = useCallback(
 		(options?: { closeDrawer?: boolean }): void => {
 			if (options?.closeDrawer) {
-				setSelectedAccountId(null);
+				void setSelectedAccountId(null);
 			}
-			handleCreateSuccess();
+			void handleCreateSuccess();
 		},
 		[handleCreateSuccess, setSelectedAccountId],
 	);
@@ -232,8 +232,8 @@ function ServiceAccountsSettings(): JSX.Element {
 							placeholder="Search by name or email..."
 							value={searchQuery}
 							onChange={(e): void => {
-								setSearchQuery(e.target.value);
-								setPage(1);
+								void setSearchQuery(e.target.value);
+								void setPage(1);
 							}}
 							className="sa-settings-search-input"
 						/>

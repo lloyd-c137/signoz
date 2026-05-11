@@ -155,7 +155,7 @@ function KeysTab({
 
 	const onRevokeClick = useCallback(
 		(keyId: string): void => {
-			setRevokeKeyId(keyId);
+			void setRevokeKeyId(keyId);
 		},
 		[setRevokeKeyId],
 	);
