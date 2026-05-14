@@ -42,9 +42,7 @@ SEEDER_MARKER = {"seeder": "true"}
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    conn = clickhouse_connect.get_client(
-        host=CH_HOST, port=CH_PORT, username=CH_USER, password=CH_PASSWORD
-    )
+    conn = clickhouse_connect.get_client(host=CH_HOST, port=CH_PORT, username=CH_USER, password=CH_PASSWORD)
     app.state.ch = conn
     try:
         yield
