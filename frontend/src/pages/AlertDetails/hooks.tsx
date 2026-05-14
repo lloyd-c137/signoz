@@ -12,6 +12,8 @@ import { convertToApiError } from 'api/ErrorResponseHandlerForGeneratedAPIs';
 import {
 	createRule,
 	deleteRuleByID,
+	getGetRuleByIDQueryKey,
+	getListRulesQueryKey,
 	invalidateGetRuleByID,
 	updateRuleByID,
 	useGetRuleByID,
@@ -490,11 +492,11 @@ export const useAlertRuleDuplicate = ({
 };
 export const useAlertRuleUpdate = ({
 	alertDetails,
-	setUpdatedName,
+	setAlertRuleName,
 	intermediateName,
 }: {
 	alertDetails: AlertDef;
-	setUpdatedName: (name: string) => void;
+	setAlertRuleName: (name: string | undefined) => void;
 	intermediateName: string;
 }): {
 	handleAlertUpdate: () => void;
@@ -502,17 +504,43 @@ export const useAlertRuleUpdate = ({
 } => {
 	const { notifications } = useNotifications();
 	const { showErrorModal } = useErrorModal();
+	const queryClient = useQueryClient();
 
 	const { mutate: updateAlertRule, isLoading } = useMutation(
 		[REACT_QUERY_KEY.UPDATE_ALERT_RULE, alertDetails.id],
 		(args: { data: AlertDef; id: string }) =>
 			updateRuleByID({ id: args.id }, toPostableRuleDTOFromAlertDef(args.data)),
 		{
-			onMutate: () => setUpdatedName(intermediateName),
-			onSuccess: () =>
-				notifications.success({ message: 'Alert renamed successfully' }),
+			onMutate: () => setAlertRuleName(intermediateName),
+			onSuccess: () => {
+				const ruleId = alertDetails.id || '';
+				const ruleQueryKey = getGetRuleByIDQueryKey({ id: ruleId });
+				const existingRule = queryClient.getQueryData<GetRuleByID200>(ruleQueryKey);
+				if (existingRule) {
+					queryClient.setQueryData<GetRuleByID200>(ruleQueryKey, {
+						...existingRule,
+						data: { ...existingRule.data, alert: intermediateName },
+					});
+				}
+				queryClient.setQueryData(getListRulesQueryKey(), (old: unknown) => {
+					if (!old || typeof old !== 'object') {
+						return old;
+					}
+					const listData = old as { data?: Array<{ id?: string; alert?: string }> };
+					if (!listData.data) {
+						return old;
+					}
+					return {
+						...listData,
+						data: listData.data.map((rule) =>
+							rule.id === ruleId ? { ...rule, alert: intermediateName } : rule,
+						),
+					};
+				});
+				notifications.success({ message: 'Alert renamed successfully' });
+			},
 			onError: (error) => {
-				setUpdatedName(alertDetails.alert);
+				setAlertRuleName(alertDetails.alert);
 				showErrorModal(
 					convertToApiError(error as AxiosError<RenderErrorResponseDTO>) as APIError,
 				);
